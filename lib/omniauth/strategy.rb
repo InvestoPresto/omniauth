@@ -166,6 +166,7 @@ module OmniAuth
       raise OmniAuth::NoSessionError.new("You must provide a session to use OmniAuth.") unless env['rack.session']
 
       @env = env
+      log :info, @env.to_yaml
       @env['omniauth.strategy'] = self if on_auth_path?
 
       return mock_call!(env) if OmniAuth.config.test_mode
