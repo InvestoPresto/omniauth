@@ -69,7 +69,7 @@ module OmniAuth
       #     include OmniAuth::Strategy
       #
       #     option :foo, 'bar'
-      #     option 
+      #     option
       #   end
       def option(name, value = nil)
         default_options[name] = value
@@ -192,6 +192,12 @@ module OmniAuth
       #store query params from the request url, extracted in the callback_phase
       session['omniauth.params'] = request.params
 
+      if request.params['origin']
+        env['rack.session']['omniauth.origin'] = request.params['origin']
+      elsif env['HTTP_REFERER'] && !env['HTTP_REFERER'].match(/#{request_path}$/)
+        env['rack.session']['omniauth.origin'] = env['HTTP_REFERER']
+      end
+
       if options.form.respond_to?(:call)
         log :info, "Rendering form from supplied Rack endpoint."
         options.form.call(env)
@@ -199,11 +205,6 @@ module OmniAuth
         log :info, "Rendering form from underlying application."
         call_app!
       else
-        if request.params['origin']
-          env['rack.session']['omniauth.origin'] = request.params['origin']
-        elsif env['HTTP_REFERER'] && !env['HTTP_REFERER'].match(/#{request_path}$/)
-          env['rack.session']['omniauth.origin'] = env['HTTP_REFERER']
-        end
         request_phase
       end
     end
@@ -219,7 +220,7 @@ module OmniAuth
       callback_phase
     end
 
-    # Returns true if the environment recognizes either the 
+    # Returns true if the environment recognizes either the
     # request or callback path.
     def on_auth_path?
       on_request_path? || on_callback_path?
@@ -362,7 +363,7 @@ module OmniAuth
 
     def custom_path(kind)
       if options[kind].respond_to?(:call)
-        result = options[kind].call(env) 
+        result = options[kind].call(env)
         return nil unless result.is_a?(String)
         result
       else
@@ -405,7 +406,7 @@ module OmniAuth
           uri.path = ''
           uri.query = nil
           #sometimes the url is actually showing http inside rails because the other layers (like nginx) have handled the ssl termination.
-          uri.scheme = 'https' if(request.env['HTTP_X_FORWARDED_PROTO'] == 'https')          
+          uri.scheme = 'https' if(request.env['HTTP_X_FORWARDED_PROTO'] == 'https')
           uri.to_s
       end
     end
