@@ -192,10 +192,14 @@ module OmniAuth
       #store query params from the request url, extracted in the callback_phase
       session['omniauth.params'] = request.params
 
-      if request.params['origin']
-        env['rack.session']['omniauth.origin'] = request.params['origin']
-      elsif env['HTTP_REFERER'] && !env['HTTP_REFERER'].match(/#{request_path}$/)
-        env['rack.session']['omniauth.origin'] = env['HTTP_REFERER']
+      #
+      # /auth/:provider?origin=persist will honour the previously set origin
+      unless request.params['origin'] == 'persist' && env['rack.session']['omniauth.origin']
+        if request.params['origin']
+          env['rack.session']['omniauth.origin'] = request.params['origin']
+        elsif env['HTTP_REFERER'] && !env['HTTP_REFERER'].match(/#{request_path}$/)
+          env['rack.session']['omniauth.origin'] = env['HTTP_REFERER']
+        end
       end
 
       if options.form.respond_to?(:call)
